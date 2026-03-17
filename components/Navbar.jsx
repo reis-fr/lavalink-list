@@ -3,9 +3,11 @@ import { Sun, Moon, Plus, Home, Shield, Server, Github, AlertCircle, Menu, X } f
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { useState } from "react";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export function Navbar({ activeTab }) {
     const { theme, setTheme } = useTheme();
+    const { data: session, status } = useSession();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
@@ -80,6 +82,31 @@ export function Navbar({ activeTab }) {
                         <span className="sr-only">Toggle theme</span>
                     </Button>
 
+                    {/* Auth Actions */}
+                    {status === 'authenticated' ? (
+                        <div className="hidden md:flex items-center gap-2">
+                            <Link href="/dashboard">
+                                <Button variant="outline" className="text-foreground border-primary hover:bg-primary hover:text-primary-foreground">
+                                    Dashboard
+                                </Button>
+                            </Link>
+                            <Button
+                                variant="ghost"
+                                onClick={() => signOut()}
+                                className="text-muted-foreground hover:text-foreground"
+                            >
+                                Sign Out
+                            </Button>
+                        </div>
+                    ) : (
+                        <Button
+                            onClick={() => signIn('discord')}
+                            className="hidden md:inline-flex bg-primary text-primary-foreground hover:opacity-90"
+                        >
+                            Sign In
+                        </Button>
+                    )}
+
                     {/* Mobile Menu Toggle */}
                     <Button
                         variant="ghost"
@@ -115,17 +142,48 @@ export function Navbar({ activeTab }) {
                             <Plus className="w-4 h-4" /> Add Node
                         </Button>
                     </a>
-                    <div className="flex items-center gap-2 px-4 py-2 border-t border-border mt-2">
-                        <a href="https://github.com/stackryze/lavalink-list" target="_blank" rel="noopener noreferrer">
-                            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                                <Github className="w-5 h-5" />
+                    <div className="flex flex-col gap-2 px-4 py-2 border-t border-border mt-2">
+                        <div className="flex items-center gap-2">
+                            <a href="https://github.com/stackryze/lavalink-list" target="_blank" rel="noopener noreferrer">
+                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                                    <Github className="w-5 h-5" />
+                                </Button>
+                            </a>
+                            <a href="https://github.com/stackryze/lavalink-list/issues" target="_blank" rel="noopener noreferrer">
+                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+                                    <AlertCircle className="w-5 h-5" />
+                                </Button>
+                            </a>
+                        </div>
+                        {status === 'authenticated' ? (
+                            <div className="flex flex-col gap-2">
+                                <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)}>
+                                    <Button variant="outline" className="w-full text-foreground border-primary hover:bg-primary hover:text-primary-foreground">
+                                        Dashboard
+                                    </Button>
+                                </Link>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => {
+                                        signOut();
+                                        setIsMobileMenuOpen(false);
+                                    }}
+                                    className="w-full text-muted-foreground hover:text-foreground justify-start"
+                                >
+                                    Sign Out
+                                </Button>
+                            </div>
+                        ) : (
+                            <Button
+                                onClick={() => {
+                                    signIn('discord');
+                                    setIsMobileMenuOpen(false);
+                                }}
+                                className="w-full bg-primary text-primary-foreground hover:opacity-90"
+                            >
+                                Sign In
                             </Button>
-                        </a>
-                        <a href="https://github.com/stackryze/lavalink-list/issues" target="_blank" rel="noopener noreferrer">
-                            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                                <AlertCircle className="w-5 h-5" />
-                            </Button>
-                        </a>
+                        )}
                     </div>
                 </div>
             )}

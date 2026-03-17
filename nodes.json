@@ -1,14 +1,18 @@
 [
 
     {
+        "id": "stackryze-v4",
         "identifier": "Stackryze - v4",
         "host": "188.245.207.225",
         "port": 2333,
         "password": "youshallnotpass",
         "secure": false,
         "restVersion": "v4",
-        "authorId": "Sudheer",
+        "userId": "Sudheer",
+        "authorName": "Sudheer",
+        "authorAvatar": "",
         "website": "https://stackryze.com",
-        "discord": "https://discord.gg/stackryze"
+        "discord": "https://discord.gg/stackryze",
+        "createdAt": "2024-01-01T00:00:00Z"
     }
 ]
