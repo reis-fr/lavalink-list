@@ -1,5 +1,5 @@
 import NextAuth from 'next-auth';
-import Discord from 'next-auth/providers/discord';
+import DiscordProvider from 'next-auth/providers/discord';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { randomBytes } from 'crypto';
@@ -30,9 +30,9 @@ const getOrGenerateSecret = (key) => {
 const DISCORD_ID = process.env.DISCORD_ID || 'YOUR_DISCORD_CLIENT_ID';
 const DISCORD_SECRET = process.env.DISCORD_SECRET || 'YOUR_DISCORD_CLIENT_SECRET';
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const authOptions = {
   providers: [
-    Discord({
+    DiscordProvider({
       clientId: DISCORD_ID,
       clientSecret: DISCORD_SECRET,
       allowDangerousEmailAccountLinking: true,
@@ -44,9 +44,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: '/login',
   },
   callbacks: {
-    authorized: async ({ auth }) => {
-      return !!auth;
-    },
     jwt: async ({ token, user }) => {
       if (user) {
         token.id = user.id;
@@ -60,4 +57,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return session;
     },
   },
-});
+};
+
+export default NextAuth(authOptions);

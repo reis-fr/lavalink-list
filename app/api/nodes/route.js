@@ -3,7 +3,8 @@ import localNodes from '@/nodes.json';
 import dns from 'node:dns';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { auth } from '@/auth';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/auth';
 
 // Force prioritize IPv4 over IPv6 to fix connectivity issues on localhost
 dns.setDefaultResultOrder('ipv4first');
@@ -169,7 +170,7 @@ export async function GET() {
 // POST - Create a new node
 export async function POST(request) {
     try {
-        const session = await auth();
+        const session = await getServerSession(authOptions);
         
         if (!session?.user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -207,7 +208,7 @@ export async function POST(request) {
 // PUT - Update a node (only by owner)
 export async function PUT(request) {
     try {
-        const session = await auth();
+        const session = await getServerSession(authOptions);
         
         if (!session?.user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -257,7 +258,7 @@ export async function PUT(request) {
 // DELETE - Delete a node (only by owner)
 export async function DELETE(request) {
     try {
-        const session = await auth();
+        const session = await getServerSession(authOptions);
         
         if (!session?.user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
