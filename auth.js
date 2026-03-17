@@ -2,6 +2,7 @@ import NextAuth from 'next-auth';
 import Discord from 'next-auth/providers/discord';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import { randomBytes } from 'crypto';
 
 // Generate or read secrets automatically
 const getOrGenerateSecret = (key) => {
@@ -18,7 +19,7 @@ const getOrGenerateSecret = (key) => {
 
   if (!secrets[key]) {
     // Generate a random secret if not exists
-    secrets[key] = require('crypto').randomBytes(32).toString('hex');
+    secrets[key] = randomBytes(32).toString('hex');
     writeFileSync(secretsPath, JSON.stringify(secrets, null, 2));
   }
 
@@ -45,6 +46,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     authorized: async ({ auth }) => {
       return !!auth;
+    },
+    jwt: async ({ token, user }) => {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    session: async ({ session, token }) => {
+      if (session.user) {
+        session.user.id = token.id;
+      }
+      return session;
     },
   },
 });
