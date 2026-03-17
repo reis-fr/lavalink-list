@@ -1,9 +1,27 @@
 import { NextResponse } from 'next/server';
 import localNodes from '@/nodes.json';
 import dns from 'node:dns';
+import { readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
+import { auth } from '@/auth';
 
 // Force prioritize IPv4 over IPv6 to fix connectivity issues on localhost
 dns.setDefaultResultOrder('ipv4first');
+
+const nodesPath = join(process.cwd(), 'nodes.json');
+
+const readNodes = () => {
+  try {
+    const data = readFileSync(nodesPath, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+};
+
+const writeNodes = (nodes) => {
+  writeFileSync(nodesPath, JSON.stringify(nodes, null, 4));
+};
 
 // Helper to format bytes
 function formatBytes(bytes, decimals = 2) {
@@ -145,5 +163,130 @@ export async function GET() {
     } catch (error) {
         console.error("Error processing nodes:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+}
+
+// POST - Create a new node
+export async function POST(request) {
+    try {
+        const session = await auth();
+        
+        if (!session?.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const body = await request.json();
+        const nodes = readNodes();
+
+        const newNode = {
+            id: `node-${Date.now()}`,
+            identifier: body.identifier,
+            host: body.host,
+            port: parseInt(body.port),
+            password: body.password,
+            secure: body.secure === 'true' || body.secure === true,
+            restVersion: body.restVersion || 'v4',
+            userId: session.user.id,
+            authorName: session.user.name || session.user.email,
+            authorAvatar: session.user.image || '',
+            website: body.website || '',
+            discord: body.discord || '',
+            createdAt: new Date().toISOString(),
+        };
+
+        nodes.push(newNode);
+        writeNodes(nodes);
+
+        return NextResponse.json(newNode, { status: 201 });
+    } catch (error) {
+        console.error('Error creating node:', error);
+        return NextResponse.json({ error: 'Failed to create node' }, { status: 500 });
+    }
+}
+
+// PUT - Update a node (only by owner)
+export async function PUT(request) {
+    try {
+        const session = await auth();
+        
+        if (!session?.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const { searchParams } = new URL(request.url);
+        const nodeId = searchParams.get('id');
+        
+        if (!nodeId) {
+            return NextResponse.json({ error: 'Node ID required' }, { status: 400 });
+        }
+
+        const body = await request.json();
+        const nodes = readNodes();
+        const nodeIndex = nodes.findIndex(n => n.id === nodeId);
+
+        if (nodeIndex === -1) {
+            return NextResponse.json({ error: 'Node not found' }, { status: 404 });
+        }
+
+        if (nodes[nodeIndex].userId !== session.user.id) {
+            return NextResponse.json({ error: 'Forbidden - You can only edit your own nodes' }, { status: 403 });
+        }
+
+        const updatedNode = {
+            ...nodes[nodeIndex],
+            identifier: body.identifier || nodes[nodeIndex].identifier,
+            host: body.host || nodes[nodeIndex].host,
+            port: body.port ? parseInt(body.port) : nodes[nodeIndex].port,
+            password: body.password || nodes[nodeIndex].password,
+            secure: body.secure !== undefined ? (body.secure === 'true' || body.secure === true) : nodes[nodeIndex].secure,
+            restVersion: body.restVersion || nodes[nodeIndex].restVersion,
+            website: body.website !== undefined ? body.website : nodes[nodeIndex].website,
+            discord: body.discord !== undefined ? body.discord : nodes[nodeIndex].discord,
+        };
+
+        nodes[nodeIndex] = updatedNode;
+        writeNodes(nodes);
+
+        return NextResponse.json(updatedNode);
+    } catch (error) {
+        console.error('Error updating node:', error);
+        return NextResponse.json({ error: 'Failed to update node' }, { status: 500 });
+    }
+}
+
+// DELETE - Delete a node (only by owner)
+export async function DELETE(request) {
+    try {
+        const session = await auth();
+        
+        if (!session?.user) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const { searchParams } = new URL(request.url);
+        const nodeId = searchParams.get('id');
+        
+        if (!nodeId) {
+            return NextResponse.json({ error: 'Node ID required' }, { status: 400 });
+        }
+
+        const nodes = readNodes();
+        const nodeIndex = nodes.findIndex(n => n.id === nodeId);
+
+        if (nodeIndex === -1) {
+            return NextResponse.json({ error: 'Node not found' }, { status: 404 });
+        }
+
+        if (nodes[nodeIndex].userId !== session.user.id) {
+            return NextResponse.json({ error: 'Forbidden - You can only delete your own nodes' }, { status: 403 });
+        }
+
+        const deletedNode = nodes.splice(nodeIndex, 1)[0];
+        writeNodes(nodes);
+
+        return NextResponse.json(deletedNode);
+    } catch (error) {
+        console.error('Error deleting node:', error);
+        return NextResponse.json({ error: 'Failed to delete node' }, { status: 500 });
     }
 }
