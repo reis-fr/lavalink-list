@@ -34,9 +34,36 @@
 <!-- how to add my node -->
 ## How to add my node?
 
+### Option 1: Using the Dashboard (Recommended)
+
+1. Visit [lavalink-list.stackryze.com](https://lavalink-list.stackryze.com)
+2. Click the **"Sign In"** button in the navbar
+3. Sign in with your Discord account via OAuth
+4. Go to the **Dashboard** page
+5. Click **"Add New Node"** button
+6. Fill in your node details:
+   - **Identifier**: A unique name for your node (e.g., "my-node")
+   - **Host**: Your node's hostname or IP address (e.g., "lava1.example.com")
+   - **Port**: The port your node is running on (default: 2333)
+   - **Password**: Your node's password
+   - **Secure (SSL)**: Toggle if your node uses SSL/TLS
+   - **REST Version**: Select your Lavalink API version (v3 or v4)
+   - **Website**: Your website URL (optional)
+   - **Discord**: Your Discord server invite link (optional)
+7. Click **"Add Node"** to submit
+
+**Benefits:**
+- Instant node publishing without pull requests
+- Easy management of your nodes in the dashboard
+- Edit or delete your nodes anytime
+- Only you can manage your own nodes
+
+### Option 2: Pull Request (GitHub)
+
 1. Fork this repository
 2. Edit the `nodes.json` file and add your node
-3. Create a pull request
+3. Create a pull request with your changes
+
 <!-- nodes.json example -->
 ## `nodes.json` example
 
